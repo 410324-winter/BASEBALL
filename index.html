@@ -1,0 +1,1997 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>街頭籃球 1v1 雙人對決 (Street Hoops 1v1)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter & Press Start 2P for Arcade Style -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #03001e 100%);
+            overflow-x: hidden;
+        }
+        .arcade-font {
+            font-family: 'Press Start 2P', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f97316;
+            border-radius: 4px;
+        }
+        /* Soft pulsing animation for buttons */
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(249, 115, 22, 0.8); }
+        }
+        .btn-glow {
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen flex flex-col justify-between select-none">
+
+    <!-- TOP NAVIGATION / HEADER -->
+    <header class="w-full bg-slate-950/80 backdrop-blur-md border-b border-orange-500/30 px-6 py-4 flex justify-between items-center z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-br from-orange-500 to-red-600 p-2.5 rounded-xl shadow-lg shadow-orange-500/20">
+                <i class="fa-solid fa-basketball text-2xl text-white animate-spin-slow"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-wider bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 bg-clip-text text-transparent">STREET HOOPS 1v1</h1>
+                <p class="text-xs text-slate-400 font-semibold tracking-wide">本地雙人鍵盤極速對抗</p>
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="toggleMute()" id="mute-btn" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition border border-slate-700 text-slate-300">
+                <i id="mute-icon" class="fa-solid fa-volume-high"></i>
+            </button>
+            <button onclick="openRules()" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition border border-slate-700 text-slate-300 flex items-center gap-2">
+                <i class="fa-solid fa-circle-question"></i> <span class="hidden sm:inline">操作說明</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-7xl mx-auto w-full">
+        
+        <!-- MAIN MENU SCREEN -->
+        <div id="menu-screen" class="w-full max-w-2xl bg-slate-900/90 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-lg flex flex-col gap-8 transition-all duration-300">
+            <div class="text-center">
+                <span class="px-4 py-1.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20 text-xs font-semibold uppercase tracking-widest">Streetball Arena</span>
+                <h2 class="text-4xl sm:text-5xl font-extrabold mt-3 tracking-tight text-white leading-tight">
+                    街頭雙人 <span class="text-orange-500">鬥牛大賽</span>
+                </h2>
+                <p class="text-slate-400 mt-2">在同一鍵盤上同場競技，用假動作、抄截、蓄力三分球與勁爆灌籃制霸球場！</p>
+            </div>
+
+            <!-- GAME SETUP AND OPTIONS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-950/50 p-6 rounded-2xl border border-slate-800">
+                <!-- Time limits -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2 flex items-center gap-2">
+                        <i class="fa-regular fa-clock text-orange-400"></i> 比賽時間 (秒)
+                    </label>
+                    <select id="game-duration" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-slate-200">
+                        <option value="60">60 秒 (急速賽)</option>
+                        <option value="120" selected>120 秒 (常規賽)</option>
+                        <option value="180">180 秒 (激情戰)</option>
+                        <option value="300">300 秒 (持久戰)</option>
+                    </select>
+                </div>
+                <!-- Points limits -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-yellow-400"></i> 制勝分數 (上限)
+                    </label>
+                    <select id="score-limit" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 focus:outline-none focus:border-orange-500 text-slate-200">
+                        <option value="11">11 分 (快速局)</option>
+                        <option value="21" selected>21 分 (標準街頭賽)</option>
+                        <option value="50">50 分 (馬拉松)</option>
+                        <option value="999">無限制 (純計時)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- TEAMS / PLAYERS CUSTOMIZATION -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- P1 Configuration -->
+                <div class="bg-gradient-to-br from-red-950/20 to-slate-900 p-5 rounded-2xl border border-red-500/20">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="w-7 h-7 flex items-center justify-center bg-red-500 text-white font-bold rounded-lg text-sm">1P</span>
+                        <h3 class="font-extrabold text-red-400">紅隊主攻手</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1 font-semibold">球員名稱</label>
+                            <input id="p1-name" type="text" value="火熱紅牛" class="w-full bg-slate-950 border border-red-500/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1 font-semibold">球衣背號</label>
+                            <input id="p1-number" type="number" min="0" max="99" value="23" class="w-full bg-slate-950 border border-red-500/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 text-slate-200">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- P2 Configuration -->
+                <div class="bg-gradient-to-br from-blue-950/20 to-slate-900 p-5 rounded-2xl border border-blue-500/20">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="w-7 h-7 flex items-center justify-center bg-blue-500 text-white font-bold rounded-lg text-sm">2P</span>
+                        <h3 class="font-extrabold text-blue-400">藍海勇士</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1 font-semibold">球員名稱</label>
+                            <input id="p2-name" type="text" value="閃電藍魔" class="w-full bg-slate-950 border border-blue-500/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1 font-semibold">球衣背號</label>
+                            <input id="p2-number" type="number" min="0" max="99" value="30" class="w-full bg-slate-950 border border-blue-500/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LAUNCH BUTTON -->
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-extrabold rounded-2xl shadow-xl shadow-orange-500/20 transition-all text-xl tracking-wider btn-glow flex items-center justify-center gap-3">
+                <i class="fa-solid fa-play"></i> 進入街頭球場 (START)
+            </button>
+        </div>
+
+        <!-- GAME PLAY SCREEN (Initially Hidden) -->
+        <div id="game-screen" class="w-full hidden flex-col items-center gap-4 transition-all duration-300">
+            <!-- SCOREBOARD HUD -->
+            <div class="w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
+                <!-- P1 Info & Score -->
+                <div class="flex items-center gap-4 w-full md:w-1/3 justify-start">
+                    <div class="text-right">
+                        <div class="flex items-center gap-2 justify-end">
+                            <span id="p1-on-fire" class="hidden px-2 py-0.5 rounded bg-orange-500 text-white text-[10px] font-bold animate-bounce"><i class="fa-solid fa-fire text-yellow-300"></i> FIRE</span>
+                            <span id="p1-hud-name" class="font-extrabold text-red-400 text-lg">P1 PLAYER</span>
+                        </div>
+                        <span class="text-xs text-slate-400">背號 #<span id="p1-hud-num">23</span></span>
+                    </div>
+                    <div id="p1-hud-score" class="arcade-font text-3xl sm:text-4xl px-4 py-2 bg-red-950/50 border border-red-500/30 rounded-xl text-red-500 font-extrabold min-w-[70px] text-center">00</div>
+                </div>
+
+                <!-- Game clock and middle info -->
+                <div class="flex flex-col items-center w-full md:w-1/3">
+                    <span class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">STREET STADIUM</span>
+                    <div id="game-timer" class="arcade-font text-2xl sm:text-3xl text-yellow-400 my-1 bg-slate-900 border border-slate-700 px-5 py-1.5 rounded-xl min-w-[120px] text-center">02:00</div>
+                    <div class="text-xs text-orange-400 font-semibold" id="score-limit-hud">先得 21 分獲勝</div>
+                </div>
+
+                <!-- P2 Info & Score -->
+                <div class="flex items-center gap-4 w-full md:w-1/3 justify-end">
+                    <div id="p2-hud-score" class="arcade-font text-3xl sm:text-4xl px-4 py-2 bg-blue-950/50 border border-blue-500/30 rounded-xl text-blue-500 font-extrabold min-w-[70px] text-center">00</div>
+                    <div class="text-left">
+                        <div class="flex items-center gap-2 justify-start">
+                            <span id="p2-hud-name" class="font-extrabold text-blue-400 text-lg">P2 PLAYER</span>
+                            <span id="p2-on-fire" class="hidden px-2 py-0.5 rounded bg-orange-500 text-white text-[10px] font-bold animate-bounce"><i class="fa-solid fa-fire text-yellow-300"></i> FIRE</span>
+                        </div>
+                        <span class="text-xs text-slate-400">背號 #<span id="p2-hud-num">30</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STAGE AND KEYBOARD NOTIFICATIONS/TIPS -->
+            <div class="w-full flex justify-between text-xs text-slate-400 px-2">
+                <div class="flex items-center gap-2">
+                    <kbd class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">A/D</kbd>移動 
+                    <kbd class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">W</kbd>跳躍/扣籃 
+                    <kbd class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">S</kbd>防守 
+                    <kbd class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">F</kbd>按住投籃/按一下抄截
+                </div>
+                <div class="flex items-center gap-2">
+                    <kbd class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">←/→</kbd>移動 
+                    <kbd class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">↑</kbd>跳躍/扣籃 
+                    <kbd class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">↓</kbd>防守 
+                    <kbd class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">L</kbd>按住投籃/按一下抄截
+                </div>
+            </div>
+
+            <!-- CANVAS ARENA CONTAINER -->
+            <div class="relative w-full border-4 border-slate-900 rounded-3xl overflow-hidden bg-slate-950 shadow-2xl shadow-orange-500/5">
+                <!-- Power-meter displays overlaid on top layer -->
+                <div id="p1-power-wrapper" class="absolute top-4 left-6 hidden flex-col gap-1 z-10 bg-slate-900/80 p-2 rounded-xl border border-red-500/30">
+                    <span class="text-[10px] text-red-400 font-bold">1P 投籃集氣</span>
+                    <div class="w-24 bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800">
+                        <div id="p1-power-bar" class="h-full bg-gradient-to-r from-orange-500 to-red-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div id="p2-power-wrapper" class="absolute top-4 right-6 hidden flex-col gap-1 z-10 bg-slate-900/80 p-2 rounded-xl border border-blue-500/30">
+                    <span class="text-[10px] text-blue-400 font-bold text-right block">2P 投籃集氣</span>
+                    <div class="w-24 bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800">
+                        <div id="p2-power-bar" class="h-full bg-gradient-to-r from-orange-500 to-blue-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Dynamic game event alerts (e.g. SLAM DUNK, BLOCKED) -->
+                <div id="game-alert-box" class="absolute inset-x-0 top-1/3 flex justify-center items-center pointer-events-none z-10 opacity-0 transform scale-50 transition-all duration-300">
+                    <div id="game-alert-text" class="arcade-font text-2xl sm:text-4xl text-yellow-400 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)] px-8 py-4 rounded-2xl bg-slate-950/90 border-2 border-yellow-400 text-center uppercase tracking-wider">
+                        STEAL!
+                    </div>
+                </div>
+
+                <!-- CANVAS ELEMENT -->
+                <canvas id="basketball-canvas" class="w-full h-auto block" width="1000" height="500"></canvas>
+            </div>
+
+            <!-- IN-GAME ACTIONS -->
+            <div class="flex gap-4 w-full justify-center">
+                <button onclick="pauseGame()" id="pause-btn" class="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700 transition flex items-center gap-2">
+                    <i id="pause-icon" class="fa-solid fa-pause"></i> <span id="pause-text">暫停比賽</span>
+                </button>
+                <button onclick="resetMatch()" class="px-6 py-2.5 rounded-xl bg-red-900/30 hover:bg-red-900/50 border border-red-500/30 text-red-300 font-bold transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> 重新開始
+                </button>
+                <button onclick="exitToMenu()" class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800 font-bold transition flex items-center gap-2">
+                    <i class="fa-solid fa-right-from-bracket"></i> 返回大廳
+                </button>
+            </div>
+        </div>
+
+        <!-- RESULTS SCREEN (Initially Hidden) -->
+        <div id="results-screen" class="w-full max-w-xl hidden bg-slate-900/90 border-2 border-yellow-500/50 rounded-3xl p-8 shadow-2xl backdrop-blur-lg flex flex-col gap-6 text-center transition-all duration-300">
+            <div>
+                <i class="fa-solid fa-crown text-6xl text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] animate-bounce mb-3"></i>
+                <h2 class="text-3xl font-extrabold tracking-tight">比賽結果 (GAME OVER)</h2>
+                <p class="text-slate-400 mt-1">熱血街頭的一場極限之戰！</p>
+            </div>
+
+            <div class="bg-slate-950/60 rounded-2xl p-6 border border-slate-800 flex flex-col gap-4">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+                    <span id="winner-tag" class="text-xl font-black text-yellow-400 tracking-wider">P1 PLAYER 獲勝！</span>
+                    <span id="final-duration" class="text-sm text-slate-400 font-semibold">耗時 2:00</span>
+                </div>
+
+                <!-- Stats Breakdown -->
+                <div class="grid grid-cols-3 gap-2 text-sm mt-2">
+                    <div class="text-left font-extrabold text-red-400" id="res-p1-name">P1</div>
+                    <div class="text-slate-500 font-bold uppercase text-xs">數據統計</div>
+                    <div class="text-right font-extrabold text-blue-400" id="res-p2-name">P2</div>
+
+                    <div class="text-left arcade-font text-lg text-red-500" id="res-p1-score">12</div>
+                    <div class="text-slate-400">總得分</div>
+                    <div class="text-right arcade-font text-lg text-blue-500" id="res-p2-score">8</div>
+
+                    <div class="text-left font-bold text-slate-300" id="res-p1-dunks">3</div>
+                    <div class="text-slate-400">勁爆灌籃</div>
+                    <div class="text-right font-bold text-slate-300" id="res-p2-dunks">1</div>
+
+                    <div class="text-left font-bold text-slate-300" id="res-p1-steals">5</div>
+                    <div class="text-slate-400">抄截成功</div>
+                    <div class="text-right font-bold text-slate-300" id="res-p2-steals">2</div>
+
+                    <div class="text-left font-bold text-slate-300" id="res-p1-blocks">2</div>
+                    <div class="text-slate-400">精彩蓋帽</div>
+                    <div class="text-right font-bold text-slate-300" id="res-p2-blocks">4</div>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="startGame()" class="flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-extrabold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> 再戰一場
+                </button>
+                <button onclick="exitToMenu()" class="flex-1 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold rounded-xl border border-slate-700 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-home"></i> 回首頁
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- CONTROLS & RULES MODAL -->
+    <div id="rules-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-all duration-200">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 md:p-8 relative flex flex-col gap-6">
+            <button onclick="closeRules()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl bg-slate-800 w-8 h-8 rounded-full flex items-center justify-center border border-slate-700 transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="text-center">
+                <i class="fa-solid fa-circle-info text-orange-500 text-4xl mb-2"></i>
+                <h3 class="text-2xl font-black">遊戲操作與規則說明</h3>
+                <p class="text-slate-400 text-sm mt-1">本地雙人玩家在一台鍵盤上進行對戰</p>
+            </div>
+
+            <!-- Rules detailed breakdown -->
+            <div class="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+                <div class="bg-slate-950 p-4 rounded-xl border border-red-500/20">
+                    <h4 class="font-extrabold text-red-400 text-sm mb-2 flex items-center gap-2">
+                        <span class="bg-red-500 text-white w-5 h-5 flex items-center justify-center text-xs rounded">1P</span> Player 1 (左側球員)
+                    </h4>
+                    <ul class="text-xs text-slate-300 space-y-1">
+                        <li><strong>A / D 鍵</strong>：控制向左 / 向右移動</li>
+                        <li><strong>W 鍵</strong>：跳躍。若在籃框附近起跳並按下投籃鍵即可觸發<strong>「大灌籃」</strong>！</li>
+                        <li><strong>S 鍵</strong>：進行下蹲防守，能大幅增加對手帶球突破難度。</li>
+                        <li><strong>F 鍵 (按住)</strong>：<strong>投籃集氣</strong>。在三分線內外釋放，投中籃圈即可得分。</li>
+                        <li><strong>F 鍵 (按一下 - 防守時)</strong>：<strong>進行抄截或空中阻攻(火鍋)</strong>。</li>
+                    </ul>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-blue-500/20">
+                    <h4 class="font-extrabold text-blue-400 text-sm mb-2 flex items-center gap-2">
+                        <span class="bg-blue-500 text-white w-5 h-5 flex items-center justify-center text-xs rounded">2P</span> Player 2 (右側球員)
+                    </h4>
+                    <ul class="text-xs text-slate-300 space-y-1">
+                        <li><strong>← / → 方向鍵</strong>：控制向左 / 向右移動</li>
+                        <li><strong>↑ 鍵</strong>：跳躍。在籃圈下起跳並按投籃鍵可以觸發<strong>「大灌籃」</strong>！</li>
+                        <li><strong>↓ 鍵</strong>：進行下蹲防守。</li>
+                        <li><strong>L 鍵 (按住)</strong>：<strong>投籃集氣</strong>。釋放以射出高拋物線美妙籃球。</li>
+                        <li><strong>L 鍵 (按一下 - 防守時)</strong>：<strong>進行抄截或空中阻攻(火鍋)</strong>。</li>
+                    </ul>
+                </div>
+
+                <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-orange-400 text-sm mb-1">🔥 戰術小撇步：</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        1. <strong>三分球 (3分)</strong>：在球場中線後投籃計 3 分，三分線以內計 2 分，灌籃計 2 分！<br>
+                        2. <strong>防守克制</strong>：在對手投籃起跳時，你也同步起跳並按抄截鍵，可打出驚天<strong>「火鍋 (BLOCK)」</strong>！<br>
+                        3. <strong>連勝熱火 (ON FIRE)</strong>：連進兩球的玩家會全身發光，籃球帶著亮麗的火花，移動更快、更不容易被抄截，投籃命中率會大幅攀升！
+                    </p>
+                </div>
+            </div>
+
+            <button onclick="closeRules()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-700 transition">
+                了解，開始挑戰！
+            </button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="w-full py-4 text-center text-xs text-slate-500 border-t border-slate-900 bg-slate-950/60 z-10">
+        <p>&copy; 2026 Street Hoops 1v1 Retro Arcade. 鍵盤本地雙人遊玩模式.</p>
+    </footer>
+
+    <!-- AUDIO SYNTHESIS & GAME CODE ENGINE -->
+    <script>
+        // Web Audio Context for zero-loading retro game sound effects
+        let audioCtx = null;
+        let isMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSynthSound(type) {
+            if (isMuted) return;
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'bounce') {
+                // Basketball bounce sound: quick short pitch drop
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(250, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.16);
+            } 
+            else if (type === 'swish') {
+                // Swoosh/net sound: White noise filtered
+                try {
+                    const bufferSize = audioCtx.sampleRate * 0.25;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(1000, now);
+                    filter.frequency.exponentialRampToValueAtTime(200, now + 0.25);
+
+                    const noiseGain = audioCtx.createGain();
+                    noiseGain.gain.setValueAtTime(0.3, now);
+                    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+                    noise.connect(filter);
+                    filter.connect(noiseGain);
+                    noiseGain.connect(audioCtx.destination);
+
+                    noise.start(now);
+                    noise.stop(now + 0.25);
+                } catch (e) {
+                    // Fallback to simpler sound if noise buffer fails
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.21);
+                }
+            } 
+            else if (type === 'rim') {
+                // Ball hitting rim: metallic bell sound
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.setValueAtTime(440, now + 0.02);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.22);
+            } 
+            else if (type === 'steal') {
+                // Quick whistle/swipe
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.start(now);
+                osc.stop(now + 0.13);
+            } 
+            else if (type === 'dunk') {
+                // Huge explosion/slam sound
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.4);
+                
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'triangle';
+                osc2.frequency.setValueAtTime(180, now);
+                osc2.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+
+                gain.gain.setValueAtTime(0.6, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+                gain2.gain.setValueAtTime(0.6, now);
+                gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+                osc.start(now);
+                osc2.start(now);
+                osc.stop(now + 0.45);
+                osc2.stop(now + 0.35);
+            } 
+            else if (type === 'block') {
+                // Low thump block sound
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.15);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
+                osc.start(now);
+                osc.stop(now + 0.17);
+            }
+            else if (type === 'whistle') {
+                // Double frequency referee whistle
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1000, now);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1030, now);
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                gain2.gain.setValueAtTime(0.25, now);
+                gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+                osc.start(now);
+                osc2.start(now);
+                osc.stop(now + 0.36);
+                osc2.stop(now + 0.36);
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('mute-icon');
+            if (isMuted) {
+                icon.className = 'fa-solid fa-volume-xmark text-red-500';
+            } else {
+                icon.className = 'fa-solid fa-volume-high text-green-500';
+            }
+        }
+
+        // MODALS & NAVIGATION SYSTEM
+        function openRules() {
+            const modal = document.getElementById('rules-modal');
+            modal.classList.remove('hidden');
+        }
+
+        function closeRules() {
+            const modal = document.getElementById('rules-modal');
+            modal.classList.add('hidden');
+        }
+
+        function exitToMenu() {
+            clearInterval(gameInterval);
+            gameActive = false;
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+        }
+
+        // GAME PHYSICS & RENDERING CORE ENGINE
+        const canvas = document.getElementById('basketball-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Physics constants
+        const GRAVITY = 0.45;
+        const FRICTION_X = 0.88;
+        const BOUNCE_DAMPING = 0.72;
+        const FLOOR_Y = 440;
+
+        // Interactive configurations
+        let gameActive = false;
+        let isPaused = false;
+        let gameInterval = null;
+        let timeLeft = 120; // seconds
+        let scoreToWin = 21;
+        let gameStartTime = 0;
+        let elapsedTime = 0;
+
+        // Player configurations
+        let p1Name = "火熱紅牛";
+        let p2Name = "閃電藍魔";
+        let p1Jersey = "23";
+        let p2Jersey = "30";
+
+        // Keyboard tracking state
+        const keys = {};
+
+        // Score tallies
+        let p1Score = 0;
+        let p2Score = 0;
+
+        // Match Stats
+        let stats = {
+            p1: { dunks: 0, steals: 0, blocks: 0 },
+            p2: { dunks: 0, steals: 0, blocks: 0 }
+        };
+
+        // Players definitions
+        const p1 = {
+            id: 1,
+            x: 180,
+            y: FLOOR_Y - 80,
+            vx: 0,
+            vy: 0,
+            width: 45,
+            height: 75,
+            color: '#ef4444',
+            secColor: '#b91c1c',
+            name: 'P1',
+            jersey: '23',
+            isJumping: false,
+            shootCharging: false,
+            shootChargeVal: 0,
+            facingRight: true,
+            hasBall: false,
+            onFire: false,
+            fireStreak: 0,
+            stealCooldown: 0,
+            state: 'idle', // idle, running, jumping, dunking, defense, blocking
+            defenseActive: false,
+            blockTimer: 0
+        };
+
+        const p2 = {
+            id: 2,
+            x: 820,
+            y: FLOOR_Y - 80,
+            vx: 0,
+            vy: 0,
+            width: 45,
+            height: 75,
+            color: '#3b82f6',
+            secColor: '#1d4ed8',
+            name: 'P2',
+            jersey: '30',
+            isJumping: false,
+            shootCharging: false,
+            shootChargeVal: 0,
+            facingRight: false,
+            hasBall: false,
+            onFire: false,
+            fireStreak: 0,
+            stealCooldown: 0,
+            state: 'idle',
+            defenseActive: false,
+            blockTimer: 0
+        };
+
+        // Ball Definition
+        const ball = {
+            x: 500,
+            y: 200,
+            vx: 0,
+            vy: 0,
+            radius: 12,
+            color: '#f97316',
+            holder: null, // p1, p2 or null
+            lastHolder: null,
+            isFired: false,
+            isDunked: false,
+            fireTrail: [],
+            rot: 0,
+            rotSpeed: 0
+        };
+
+        // COURT GEOMETRY CONFIGURATION
+        const COURT = {
+            // Net left
+            hoopLeft: {
+                backboardX: 55,
+                backboardY: 170,
+                backboardW: 10,
+                backboardH: 70,
+                rimX: 65,
+                rimY: 225,
+                rimW: 42,
+                rimH: 6,
+                netColor: '#ffffff'
+            },
+            // Net right
+            hoopRight: {
+                backboardX: 945,
+                backboardY: 170,
+                backboardW: 10,
+                backboardH: 70,
+                rimX: 893,
+                rimY: 225,
+                rimW: 42,
+                rimH: 6,
+                netColor: '#ffffff'
+            }
+        };
+
+        // Visual Particles container (Score sparks, fire, swish drips)
+        let particles = [];
+        let scoreAnims = [];
+
+        function addParticle(x, y, vx, vy, color, size, maxLife, type = 'spark') {
+            particles.push({
+                x: x,
+                y: y,
+                vx: vx,
+                vy: vy,
+                color: color,
+                size: size,
+                life: maxLife,
+                maxLife: maxLife,
+                type: type
+            });
+        }
+
+        function createScoreCelebration(x, y, teamColor) {
+            // Spark splash
+            for (let i = 0; i < 35; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 5;
+                addParticle(
+                    x, y,
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed - 1.5,
+                    teamColor,
+                    2 + Math.random() * 3,
+                    40 + Math.random() * 30,
+                    'spark'
+                );
+            }
+            // Golden glitter
+            for (let i = 0; i < 20; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 3;
+                addParticle(
+                    x, y,
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed - 1,
+                    '#fbbf24',
+                    1.5 + Math.random() * 2,
+                    50 + Math.random() * 40,
+                    'gold'
+                );
+            }
+        }
+
+        // Show a visual mid-screen text pop (like "SLAM DUNK!", "3 POINTER!")
+        function triggerTextAlert(text, duration = 1200) {
+            const box = document.getElementById('game-alert-box');
+            const element = document.getElementById('game-alert-text');
+            element.innerText = text;
+            box.style.opacity = '1';
+            box.style.transform = 'scale(1)';
+            
+            setTimeout(() => {
+                box.style.opacity = '0';
+                box.style.transform = 'scale(0.5)';
+            }, duration);
+        }
+
+        // KEYBOARD EVENT LISTENERS
+        window.addEventListener('keydown', function(e) {
+            keys[e.code] = true;
+
+            // Prevent scroll for navigation keys
+            if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+                e.preventDefault();
+            }
+
+            // Detect Tap triggers (rather than holding)
+            if (gameActive && !isPaused) {
+                // P1 Quick Steal/Block Tap (F Key)
+                if (e.code === 'KeyF' && !p1.hasBall && p1.stealCooldown <= 0) {
+                    executeDefenseAction(p1, p2);
+                }
+                // P2 Quick Steal/Block Tap (L Key)
+                if (e.code === 'KeyL' && !p2.hasBall && p2.stealCooldown <= 0) {
+                    executeDefenseAction(p2, p1);
+                }
+            }
+        });
+
+        window.addEventListener('keyup', function(e) {
+            keys[e.code] = false;
+
+            // Release Shoot F Key
+            if (e.code === 'KeyF' && p1.shootCharging) {
+                releaseShot(p1);
+            }
+            // Release Shoot L Key
+            if (e.code === 'KeyL' && p2.shootCharging) {
+                releaseShot(p2);
+            }
+        });
+
+        // Initialize / Start Match
+        function startGame() {
+            // Read Setup
+            p1Name = document.getElementById('p1-name').value.trim() || "火熱紅牛";
+            p2Name = document.getElementById('p2-name').value.trim() || "閃電藍魔";
+            p1Jersey = document.getElementById('p1-number').value.trim() || "23";
+            p2Jersey = document.getElementById('p2-number').value.trim() || "30";
+
+            timeLeft = parseInt(document.getElementById('game-duration').value);
+            scoreToWin = parseInt(document.getElementById('score-limit').value);
+
+            // Sync HUD elements
+            document.getElementById('p1-hud-name').innerText = p1Name;
+            document.getElementById('p2-hud-name').innerText = p2Name;
+            document.getElementById('p1-hud-num').innerText = p1Jersey;
+            document.getElementById('p2-hud-num').innerText = p2Jersey;
+            document.getElementById('score-limit-hud').innerText = scoreToWin === 999 ? "無限制時間戰" : `先得 ${scoreToWin} 分獲勝`;
+
+            // Reset scores & stats
+            p1Score = 0;
+            p2Score = 0;
+            stats.p1 = { dunks: 0, steals: 0, blocks: 0 };
+            stats.p2 = { dunks: 0, steals: 0, blocks: 0 };
+            
+            p1.onFire = false;
+            p1.fireStreak = 0;
+            p2.onFire = false;
+            p2.fireStreak = 0;
+
+            updateScoresHUD();
+
+            // Set up Positions
+            resetPositions();
+
+            // Screen management
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            // Start Audio and Clock
+            playSynthSound('whistle');
+            gameStartTime = Date.now();
+            elapsedTime = 0;
+            updateTimerHUD();
+
+            isPaused = false;
+            gameActive = true;
+
+            // Clear previous interval
+            if (gameInterval) clearInterval(gameInterval);
+            
+            // Core Game loop (60 FPS)
+            gameInterval = setInterval(updateGameLoop, 1000 / 60);
+
+            // Start countdown clock
+            clearInterval(clockInterval);
+            startClockCounter();
+        }
+
+        // Clock interval container
+        let clockInterval = null;
+        function startClockCounter() {
+            clockInterval = setInterval(() => {
+                if (gameActive && !isPaused) {
+                    timeLeft--;
+                    updateTimerHUD();
+
+                    if (timeLeft <= 0) {
+                        endGame();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimerHUD() {
+            const min = Math.floor(Math.max(0, timeLeft) / 60);
+            const sec = Math.max(0, timeLeft) % 60;
+            document.getElementById('game-timer').innerText = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        function updateScoresHUD() {
+            document.getElementById('p1-hud-score').innerText = p1Score.toString().padStart(2, '0');
+            document.getElementById('p2-hud-score').innerText = p2Score.toString().padStart(2, '0');
+
+            // Fire UI display
+            if (p1.onFire) document.getElementById('p1-on-fire').classList.remove('hidden');
+            else document.getElementById('p1-on-fire').classList.add('hidden');
+
+            if (p2.onFire) document.getElementById('p2-on-fire').classList.remove('hidden');
+            else document.getElementById('p2-on-fire').classList.add('hidden');
+        }
+
+        function resetPositions() {
+            p1.x = 180;
+            p1.y = FLOOR_Y - p1.height;
+            p1.vx = 0;
+            p1.vy = 0;
+            p1.isJumping = false;
+            p1.shootCharging = false;
+            p1.shootChargeVal = 0;
+            p1.facingRight = true;
+            p1.hasBall = false;
+            p1.defenseActive = false;
+            p1.state = 'idle';
+
+            p2.x = 820;
+            p2.y = FLOOR_Y - p2.height;
+            p2.vx = 0;
+            p2.vy = 0;
+            p2.isJumping = false;
+            p2.shootCharging = false;
+            p2.shootChargeVal = 0;
+            p2.facingRight = false;
+            p2.hasBall = false;
+            p2.defenseActive = false;
+            p2.state = 'idle';
+
+            // Reset ball to mid air above center court
+            ball.x = 500;
+            ball.y = 150;
+            ball.vx = 0;
+            ball.vy = 0;
+            ball.holder = null;
+            ball.lastHolder = null;
+            ball.isFired = false;
+            ball.isDunked = false;
+            ball.fireTrail = [];
+            ball.rot = 0;
+            ball.rotSpeed = 0;
+
+            document.getElementById('p1-power-wrapper').classList.add('hidden');
+            document.getElementById('p2-power-wrapper').classList.add('hidden');
+        }
+
+        function resetMatch() {
+            playSynthSound('whistle');
+            resetPositions();
+            p1Score = 0;
+            p2Score = 0;
+            stats.p1 = { dunks: 0, steals: 0, blocks: 0 };
+            stats.p2 = { dunks: 0, steals: 0, blocks: 0 };
+            p1.onFire = false;
+            p1.fireStreak = 0;
+            p2.onFire = false;
+            p2.fireStreak = 0;
+            updateScoresHUD();
+            timeLeft = parseInt(document.getElementById('game-duration').value);
+            updateTimerHUD();
+            if (isPaused) pauseGame();
+            triggerTextAlert("MATCH RESTARTED!");
+        }
+
+        function pauseGame() {
+            isPaused = !isPaused;
+            const btnText = document.getElementById('pause-text');
+            const btnIcon = document.getElementById('pause-icon');
+            if (isPaused) {
+                btnText.innerText = "繼續比賽";
+                btnIcon.className = "fa-solid fa-play";
+                triggerTextAlert("GAME PAUSED", 800);
+            } else {
+                btnText.innerText = "暫停比賽";
+                btnIcon.className = "fa-solid fa-pause";
+            }
+        }
+
+        // STEALING & BLOCKING CONTROLLER
+        function executeDefenseAction(player, opponent) {
+            player.stealCooldown = 35; // Frames of cooldown to avoid spamming
+            player.state = 'blocking';
+            player.blockTimer = 15; // Active frame window for action
+            
+            // Calculate distance
+            const dx = opponent.x - player.x;
+            const dy = opponent.y - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // Audio feedback
+            playSynthSound('steal');
+
+            if (opponent.hasBall) {
+                // Steal logic
+                if (dist < 75 && !player.defenseActive) {
+                    // Check if opponent is charging a shot (vulnerable!)
+                    let stealChance = 0.45;
+                    if (opponent.shootCharging) stealChance = 0.85; // highly vulnerable
+                    if (opponent.onFire) stealChance -= 0.20; // Fire player hard to steal from
+
+                    if (Math.random() < stealChance) {
+                        // Steal Success!
+                        opponent.hasBall = false;
+                        opponent.shootCharging = false;
+                        opponent.fireStreak = 0; // break streak
+                        opponent.onFire = false;
+                        
+                        ball.holder = player;
+                        player.hasBall = true;
+                        player.facingRight = (opponent.x > player.x);
+                        
+                        // Register Stats
+                        if (player.id === 1) stats.p1.steals++;
+                        else stats.p2.steals++;
+
+                        triggerTextAlert("STEAL!");
+                        // Visual particles
+                        for(let i=0; i<8; i++) {
+                            addParticle(ball.x, ball.y, (Math.random()-0.5)*4, (Math.random()-0.5)*4, '#22c55e', 3, 20);
+                        }
+                    }
+                }
+            } else if (ball.isFired && !ball.isDunked) {
+                // Block/Whack shot logic (Defending a shot in mid-air!)
+                // Check if player is near the ball path and high enough
+                const bdx = ball.x - (player.x + player.width/2);
+                const bdy = ball.y - (player.y + player.height/2);
+                const bdist = Math.sqrt(bdx*bdx + bdy*bdy);
+
+                if (bdist < 85 && player.y < FLOOR_Y - 110) {
+                    // Impressive block! Knock ball down
+                    ball.isFired = false;
+                    ball.vx = player.facingRight ? 4 : -4;
+                    ball.vy = -1; // bounce away
+                    ball.rotSpeed = 0.1;
+                    
+                    if (player.id === 1) stats.p1.blocks++;
+                    else stats.p2.blocks++;
+
+                    playSynthSound('block');
+                    triggerTextAlert("BLOCKED!!!", 1000);
+
+                    // Sparks
+                    for(let i=0; i<15; i++) {
+                        addParticle(ball.x, ball.y, (Math.random()-0.5)*6, (Math.random()-0.5)*6, '#ef4444', 3, 30);
+                    }
+                }
+            }
+        }
+
+        // SHOT DISCHARGE PHYSICS
+        function startShotCharging(player) {
+            player.shootCharging = true;
+            player.shootChargeVal = 0;
+            player.state = 'defense'; // visual windup stance
+            const wrapperId = player.id === 1 ? 'p1-power-wrapper' : 'p2-power-wrapper';
+            document.getElementById(wrapperId).classList.remove('hidden');
+        }
+
+        function releaseShot(player) {
+            player.shootCharging = false;
+            const wrapperId = player.id === 1 ? 'p1-power-wrapper' : 'p2-power-wrapper';
+            document.getElementById(wrapperId).classList.add('hidden');
+
+            if (!player.hasBall) return;
+
+            // Compute shot parameters
+            player.hasBall = false;
+            ball.holder = null;
+            ball.lastHolder = player;
+            ball.isFired = true;
+            ball.isDunked = false;
+
+            // Target calculations: determine closest / active hoop
+            // P1 shoots toward P2 hoop (Right: x=893), P2 shoots toward P1 hoop (Left: x=65)
+            const targetX = player.id === 1 ? COURT.hoopRight.rimX : COURT.hoopLeft.rimX;
+            const targetY = player.id === 1 ? COURT.hoopRight.rimY : COURT.hoopLeft.rimY;
+
+            // Distance & direction
+            const distToHoop = targetX - player.x;
+            const absoluteDist = Math.abs(distToHoop);
+            
+            // Base velocity proportional to distance + charging factor
+            // A perfect shot requires matching the distance with optimal power
+            const idealPower = Math.sqrt(absoluteDist * GRAVITY) * 0.95; 
+            const chargePowerFactor = (player.shootChargeVal / 100) * 1.8; // range 0 to 1.8
+            
+            // Apply physics arc
+            ball.x = player.x + (player.facingRight ? player.width + 10 : -15);
+            ball.y = player.y - 10;
+            
+            // Horizontal velocity based on charging percentage & alignment
+            const finalVx = (distToHoop > 0 ? 1 : -1) * (idealPower * (0.6 + chargePowerFactor * 0.4));
+            // Vertical velocity (launch angle)
+            const finalVy = -8 - (chargePowerFactor * 7);
+
+            // Accuracy modification based on Fire State
+            const accuracyOffset = player.onFire ? 0 : (Math.random() - 0.5) * 1.5;
+
+            ball.vx = finalVx + accuracyOffset;
+            ball.vy = finalVy;
+            ball.rotSpeed = player.facingRight ? 0.2 : -0.2;
+
+            playSynthSound('steal'); // Swish throw sound effect
+
+            // Reset player charge
+            player.shootChargeVal = 0;
+        }
+
+        // GAMEPLAY LOOP (INPUTS, COLLISIONS, STATE, GRAPHICS)
+        function updateGameLoop() {
+            if (isPaused || !gameActive) return;
+
+            handleInputs();
+            updatePlayers();
+            updateBallPhysics();
+            updateParticles();
+            renderCourt();
+        }
+
+        // KEYBOARD INPUT HANDLERS
+        function handleInputs() {
+            // P1 MOVEMENT (A/D/W/S/F)
+            if (!p1.shootCharging) {
+                if (keys['KeyA']) {
+                    p1.vx = -4.5;
+                    p1.facingRight = false;
+                    p1.state = 'running';
+                } else if (keys['KeyD']) {
+                    p1.vx = 4.5;
+                    p1.facingRight = true;
+                    p1.state = 'running';
+                } else {
+                    p1.vx *= FRICTION_X;
+                    p1.state = 'idle';
+                }
+
+                // Jump W
+                if (keys['KeyW'] && !p1.isJumping && !p1.defenseActive) {
+                    p1.vy = -10.5;
+                    p1.isJumping = true;
+                    p1.state = 'jumping';
+                    playSynthSound('bounce');
+                }
+
+                // Crouching defense S
+                if (keys['KeyS'] && !p1.isJumping) {
+                    p1.defenseActive = true;
+                    p1.vx *= 0.5; // slow down during defense stance
+                    p1.state = 'defense';
+                } else {
+                    p1.defenseActive = false;
+                }
+            } else {
+                // Immobilized during charge
+                p1.vx = 0;
+            }
+
+            // Shoot Charge F (P1)
+            if (keys['KeyF']) {
+                if (p1.hasBall && !p1.shootCharging) {
+                    startShotCharging(p1);
+                } else if (p1.shootCharging) {
+                    // Accumulate shot charging power (oscillate between 0 and 100)
+                    p1.shootChargeVal += 2.5;
+                    if (p1.shootChargeVal > 100) p1.shootChargeVal = 0; // reset loop style charge
+                    document.getElementById('p1-power-bar').style.width = p1.shootChargeVal + '%';
+                }
+            }
+
+
+            // P2 MOVEMENT (Arrows/L)
+            if (!p2.shootCharging) {
+                if (keys['ArrowLeft']) {
+                    p2.vx = -4.5;
+                    p2.facingRight = false;
+                    p2.state = 'running';
+                } else if (keys['ArrowRight']) {
+                    p2.vx = 4.5;
+                    p2.facingRight = true;
+                    p2.state = 'running';
+                } else {
+                    p2.vx *= FRICTION_X;
+                    p2.state = 'idle';
+                }
+
+                // Jump Up Arrow
+                if (keys['ArrowUp'] && !p2.isJumping && !p2.defenseActive) {
+                    p2.vy = -10.5;
+                    p2.isJumping = true;
+                    p2.state = 'jumping';
+                    playSynthSound('bounce');
+                }
+
+                // Crouching defense Down Arrow
+                if (keys['ArrowDown'] && !p2.isJumping) {
+                    p2.defenseActive = true;
+                    p2.vx *= 0.5;
+                    p2.state = 'defense';
+                } else {
+                    p2.defenseActive = false;
+                }
+            } else {
+                p2.vx = 0;
+            }
+
+            // Shoot Charge L (P2)
+            if (keys['KeyL']) {
+                if (p2.hasBall && !p2.shootCharging) {
+                    startShotCharging(p2);
+                } else if (p2.shootCharging) {
+                    p2.shootChargeVal += 2.5;
+                    if (p2.shootChargeVal > 100) p2.shootChargeVal = 0;
+                    document.getElementById('p2-power-bar').style.width = p2.shootChargeVal + '%';
+                }
+            }
+        }
+
+        // POSITION & KINEMATIC INTEGRATORS
+        function updatePlayers() {
+            // Apply gravity & integration to P1
+            p1.vy += GRAVITY;
+            p1.x += p1.vx;
+            p1.y += p1.vy;
+
+            // Apply gravity & integration to P2
+            p2.vy += GRAVITY;
+            p2.x += p2.vx;
+            p2.y += p2.vy;
+
+            // Steal and Block cooldown frames update
+            if (p1.stealCooldown > 0) p1.stealCooldown--;
+            if (p2.stealCooldown > 0) p2.stealCooldown--;
+            if (p1.blockTimer > 0) p1.blockTimer--;
+            if (p2.blockTimer > 0) p2.blockTimer--;
+
+            // Reset Blocking visual states
+            if (p1.blockTimer === 0 && p1.state === 'blocking') p1.state = 'idle';
+            if (p2.blockTimer === 0 && p2.state === 'blocking') p2.state = 'idle';
+
+            // Boundaries collision (Floor)
+            if (p1.y + p1.height >= FLOOR_Y) {
+                p1.y = FLOOR_Y - p1.height;
+                p1.vy = 0;
+                p1.isJumping = false;
+            }
+            if (p2.y + p2.height >= FLOOR_Y) {
+                p2.y = FLOOR_Y - p2.height;
+                p2.vy = 0;
+                p2.isJumping = false;
+            }
+
+            // Boundaries collision (Walls & Out of bounds)
+            p1.x = Math.max(20, Math.min(canvas.width - p1.width - 20, p1.x));
+            p2.x = Math.max(20, Math.min(canvas.width - p2.width - 20, p2.x));
+
+            // Prevent players from passing through each other completely
+            const p1Center = p1.x + p1.width/2;
+            const p2Center = p2.x + p2.width/2;
+            const bodyDist = Math.abs(p1Center - p2Center);
+            const minDist = (p1.width + p2.width) / 2;
+
+            if (bodyDist < minDist) {
+                // Players are overlapping, push them apart gently based on relative velocity
+                const overlap = minDist - bodyDist;
+                const pushDir = p1Center < p2Center ? -1 : 1;
+                p1.x += pushDir * (overlap / 2);
+                p2.x -= pushDir * (overlap / 2);
+                
+                // If one of them has ball and the opponent is actively in defense stance
+                // there is a high dribble decay / high automatic steal chance
+                if (p1.hasBall && p2.defenseActive && Math.random() < 0.04) {
+                    p1.hasBall = false;
+                    p2.hasBall = true;
+                    ball.holder = p2;
+                    playSynthSound('steal');
+                    triggerTextAlert("BODY STEAL!");
+                }
+                if (p2.hasBall && p1.defenseActive && Math.random() < 0.04) {
+                    p2.hasBall = false;
+                    p1.hasBall = true;
+                    ball.holder = p1;
+                    playSynthSound('steal');
+                    triggerTextAlert("BODY STEAL!");
+                }
+            }
+
+            // Slam Dunk mechanics checks
+            checkDunkOpportunities(p1);
+            checkDunkOpportunities(p2);
+        }
+
+        // DUNK DYNAMICS HANDLER
+        function checkDunkOpportunities(player) {
+            // Player must have ball, be jumping, and be close to either hoop
+            if (!player.hasBall || !player.isJumping) return;
+
+            // Distance to Left rim (X: 65, Y: 225) or Right rim (X: 893, Y: 225)
+            const leftRimDistX = Math.abs((player.x + player.width/2) - COURT.hoopLeft.rimX);
+            const rightRimDistX = Math.abs((player.x + player.width/2) - COURT.hoopRight.rimX);
+
+            const nearLeftHoop = leftRimDistX < 65 && player.y < COURT.hoopLeft.rimY + 50;
+            const nearRightHoop = rightRimDistX < 65 && player.y < COURT.hoopRight.rimY + 50;
+
+            if (nearLeftHoop || nearRightHoop) {
+                // Slam dunk triggered!
+                player.state = 'dunking';
+                ball.isDunked = true;
+                ball.isFired = false;
+
+                // Propel player down to slam the ball
+                player.vy = 4; // pull down fast
+                ball.y = player.y - 15;
+                ball.x = player.x + (player.facingRight ? player.width : -10);
+
+                // If player is touching or extremely close to the basket rim height, count the dunk
+                if (player.y > COURT.hoopLeft.rimY - 40 && player.y < COURT.hoopLeft.rimY + 30) {
+                    executeDunkScore(player, nearLeftHoop ? 'left' : 'right');
+                }
+            }
+        }
+
+        function executeDunkScore(player, side) {
+            player.hasBall = false;
+            ball.holder = null;
+            ball.isDunked = false;
+            
+            // Slam the ball downward through net
+            ball.x = side === 'left' ? COURT.hoopLeft.rimX + 20 : COURT.hoopRight.rimX + 20;
+            ball.y = COURT.hoopLeft.rimY + 15;
+            ball.vx = 0;
+            ball.vy = 6; // blast downwards
+
+            // Award points
+            awardScore(player.id, 2);
+
+            // Audio & Screenshake Alert
+            playSynthSound('dunk');
+            triggerTextAlert("SLAM DUNK!", 1500);
+
+            // Record Stats
+            if (player.id === 1) stats.p1.dunks++;
+            else stats.p2.dunks++;
+
+            // Create huge smoke and fire particles at rim
+            createScoreCelebration(ball.x, ball.y, player.color);
+            for (let i = 0; i < 15; i++) {
+                addParticle(
+                    ball.x + (Math.random() - 0.5) * 30,
+                    ball.y + (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 4,
+                    -1 - Math.random() * 3,
+                    '#475569',
+                    6 + Math.random() * 6,
+                    40,
+                    'smoke'
+                );
+            }
+
+            // Visual recoil effect on player
+            player.vy = -3; // slight bounce off the rim
+            player.isJumping = true;
+        }
+
+        // BASKETBALL PHYSICS & RESOLUTIONS
+        function updateBallPhysics() {
+            // Ball is held by a player
+            if (ball.holder) {
+                // Ball snaps next to player's torso/hand
+                const p = ball.holder;
+                ball.x = p.x + (p.facingRight ? p.width - 5 : 5);
+                
+                // Dribble animation wave
+                const dribbleSpeed = p.state === 'running' ? 0.35 : 0.15;
+                const dribbleAmp = p.state === 'running' ? 14 : 7;
+                const dribbleHeight = Math.sin(Date.now() * dribbleSpeed) * dribbleAmp;
+
+                ball.y = p.y + p.height / 2 + dribbleHeight;
+                ball.vx = p.vx;
+                ball.vy = p.vy;
+
+                // Sound effect when dribble touches down
+                if (dribbleHeight > dribbleAmp - 1 && Math.random() < 0.2) {
+                    playSynthSound('bounce');
+                }
+
+                // Fire trail decay if held
+                if (ball.fireTrail.length > 0) ball.fireTrail.pop();
+                return;
+            }
+
+            // Ball is in free physics flight
+            ball.vy += GRAVITY;
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            // Rotation of ball in air
+            ball.rot += ball.rotSpeed;
+
+            // High velocity fire trail
+            if (ball.lastHolder && ball.lastHolder.onFire) {
+                ball.fireTrail.unshift({ x: ball.x, y: ball.y });
+                if (ball.fireTrail.length > 15) ball.fireTrail.pop();
+            } else if (ball.fireTrail.length > 0) {
+                ball.fireTrail.pop();
+            }
+
+            // Boundary collision (Floor)
+            if (ball.y + ball.radius >= FLOOR_Y) {
+                ball.y = FLOOR_Y - ball.radius;
+                ball.vy = -ball.vy * BOUNCE_DAMPING;
+                ball.vx *= FRICTION_X;
+                ball.rotSpeed *= FRICTION_X;
+
+                if (Math.abs(ball.vy) > 1.5) {
+                    playSynthSound('bounce');
+                }
+            }
+
+            // Boundary collision (Left/Right Walls)
+            if (ball.x - ball.radius <= 10) {
+                ball.x = 10 + ball.radius;
+                ball.vx = -ball.vx * 0.8;
+                playSynthSound('rim');
+            }
+            if (ball.x + ball.radius >= canvas.width - 10) {
+                ball.x = canvas.width - 10 - ball.radius;
+                ball.vx = -ball.vx * 0.8;
+                playSynthSound('rim');
+            }
+
+            // Player pickup detection
+            if (!ball.isFired && !ball.isDunked) {
+                checkPickup(p1);
+                checkPickup(p2);
+            } else {
+                // Can pick up after shot begins to fall down (descending trajectory)
+                if (ball.vy > 1.0) {
+                    ball.isFired = false; // eligible for pick up
+                }
+            }
+
+            // COLLISION RESOLUTIONS WITH HOOPS / BACKBOARDS / RIMS
+            resolveHoopCollisions();
+        }
+
+        function checkPickup(player) {
+            const dx = ball.x - (player.x + player.width/2);
+            const dy = ball.y - (player.y + player.height/2);
+            const dist = Math.sqrt(dx*dx + dy*dy);
+
+            if (dist < 55) {
+                ball.holder = player;
+                player.hasBall = true;
+                ball.isFired = false;
+                ball.isDunked = false;
+                ball.rotSpeed = 0;
+            }
+        }
+
+        // BACKBOARD AND RIM DETECTOR
+        function resolveHoopCollisions() {
+            // Check Left Hoop Collisions
+            resolveSingleHoopCollision(COURT.hoopLeft, 'left');
+            // Check Right Hoop Collisions
+            resolveSingleHoopCollision(COURT.hoopRight, 'right');
+        }
+
+        function resolveSingleHoopCollision(hoop, side) {
+            // 1. Backboard collision (treated as vertical line barrier with thick width)
+            const bbX = hoop.backboardX;
+            const bbY = hoop.backboardY;
+            const bbW = hoop.backboardW;
+            const bbH = hoop.backboardH;
+
+            if (ball.x + ball.radius >= bbX && ball.x - ball.radius <= bbX + bbW &&
+                ball.y + ball.radius >= bbY && ball.y - ball.radius <= bbY + bbH) {
+                // Hit backboard, bounce away elastic
+                if (ball.x < bbX) {
+                    ball.x = bbX - ball.radius;
+                    ball.vx = -Math.abs(ball.vx) * 0.75;
+                } else {
+                    ball.x = bbX + bbW + ball.radius;
+                    ball.vx = Math.abs(ball.vx) * 0.75;
+                }
+                playSynthSound('rim');
+                // visual sparkles
+                for(let i=0; i<4; i++) addParticle(ball.x, ball.y, (Math.random()-0.5)*3, (Math.random()-0.5)*3, '#e2e8f0', 2, 15);
+            }
+
+            // 2. Rim collision (approximated as left/right vertices points)
+            // Left edge of rim, right edge of rim
+            const rimLeftX = hoop.rimX;
+            const rimRightX = hoop.rimX + hoop.rimW;
+            const rimY = hoop.rimY;
+
+            // Left Node rim collision
+            let distL = Math.sqrt((ball.x - rimLeftX)**2 + (ball.y - rimY)**2);
+            if (distL < ball.radius + 3) {
+                // Vector collision reflection
+                let nx = (ball.x - rimLeftX) / distL;
+                let ny = (ball.y - rimY) / distL;
+                let dot = ball.vx * nx + ball.vy * ny;
+                ball.vx = (ball.vx - 2 * dot * nx) * 0.65;
+                ball.vy = (ball.vy - 2 * dot * ny) * 0.65;
+                ball.x = rimLeftX + nx * (ball.radius + 4);
+                playSynthSound('rim');
+            }
+
+            // Right Node rim collision
+            let distR = Math.sqrt((ball.x - rimRightX)**2 + (ball.y - rimY)**2);
+            if (distR < ball.radius + 3) {
+                let nx = (ball.x - rimRightX) / distR;
+                let ny = (ball.y - rimY) / distR;
+                let dot = ball.vx * nx + ball.vy * ny;
+                ball.vx = (ball.vx - 2 * dot * nx) * 0.65;
+                ball.vy = (ball.vy - 2 * dot * ny) * 0.65;
+                ball.x = rimRightX + nx * (ball.radius + 4);
+                playSynthSound('rim');
+            }
+
+            // 3. Goal Scoring Check (passing downwards through the rim segment)
+            // Hoop plane center
+            const rimCenterX = hoop.rimX + hoop.rimW / 2;
+            const prevY = ball.y - ball.vy;
+
+            if (ball.x > hoop.rimX && ball.x < hoop.rimX + hoop.rimW) {
+                // Passed through rim Y plane downwards
+                if (prevY <= rimY && ball.y >= rimY) {
+                    
+                    // Validate who threw it to give score
+                    let scorerId = 0;
+                    if (ball.lastHolder) scorerId = ball.lastHolder.id;
+
+                    // If zero holders, assign based on side (Left hoop is P2's defense, P1 scores there. Right hoop is P1's defense, P2 scores there.)
+                    // Actually, Left hoop is attacked by P2, Right hoop is attacked by P1!
+                    // Let's check which side:
+                    let isThreePointer = false;
+                    let calculatedScorer = scorerId;
+
+                    if (side === 'left') {
+                        // Left net is defended by P1, attacked by P2
+                        calculatedScorer = 2;
+                        if (ball.lastHolder && ball.lastHolder.id === 2 && ball.lastHolder.x > 500) {
+                            isThreePointer = true; // shot from behind center court
+                        }
+                    } else {
+                        // Right net is defended by P2, attacked by P1
+                        calculatedScorer = 1;
+                        if (ball.lastHolder && ball.lastHolder.id === 1 && ball.lastHolder.x < 500) {
+                            isThreePointer = true; // shot from behind center court
+                        }
+                    }
+
+                    // Score award
+                    const points = isThreePointer ? 3 : 2;
+                    awardScore(calculatedScorer, points);
+
+                    // Blast confetti particles at net
+                    createScoreCelebration(rimCenterX, rimY + 10, calculatedScorer === 1 ? p1.color : p2.color);
+                    playSynthSound('swish');
+
+                    if (isThreePointer) {
+                        triggerTextAlert("💥 AMAZING 3-POINTER!!! 💥", 1500);
+                    } else {
+                        triggerTextAlert("SCORE!", 1000);
+                    }
+
+                    // Reset ball slightly below rim to prevent immediate dual triggers
+                    ball.y = rimY + 18;
+                    ball.vy = 2.5; // slight slide down
+                    ball.vx *= 0.4;
+                }
+            }
+        }
+
+        // SCORE CONTROLLER & STATS RECORDING
+        function awardScore(playerId, points) {
+            if (playerId === 1) {
+                p1Score += points;
+                p1.fireStreak++;
+                p2.fireStreak = 0; // break P2's streak
+                p2.onFire = false;
+
+                if (p1.fireStreak >= 2) {
+                    if (!p1.onFire) {
+                        p1.onFire = true;
+                        triggerTextAlert("🔥 P1 IS ON FIRE! 🔥", 1500);
+                    }
+                }
+            } else if (playerId === 2) {
+                p2Score += points;
+                p2.fireStreak++;
+                p1.fireStreak = 0; // break P1's streak
+                p1.onFire = false;
+
+                if (p2.fireStreak >= 2) {
+                    if (!p2.onFire) {
+                        p2.onFire = true;
+                        triggerTextAlert("🔥 P2 IS ON FIRE! 🔥", 1500);
+                    }
+                }
+            }
+
+            updateScoresHUD();
+
+            // Check Win condition instantly
+            if (scoreToWin !== 999 && (p1Score >= scoreToWin || p2Score >= scoreToWin)) {
+                endGame();
+            }
+        }
+
+        // END GAME SUMMARY MANAGER
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(clockInterval);
+
+            playSynthSound('whistle');
+            setTimeout(() => { playSynthSound('dunk'); }, 300);
+
+            // Set final variables
+            let winnerText = "平手！";
+            if (p1Score > p2Score) {
+                winnerText = `👑 ${p1Name} (1P) 獲勝！`;
+            } else if (p2Score > p1Score) {
+                winnerText = `👑 ${p2Name} (2P) 獲勝！`;
+            }
+
+            document.getElementById('winner-tag').innerText = winnerText;
+            document.getElementById('final-duration').innerText = `計時結束`;
+
+            // Display Stats
+            document.getElementById('res-p1-name').innerText = p1Name;
+            document.getElementById('res-p2-name').innerText = p2Name;
+            document.getElementById('res-p1-score').innerText = p1Score;
+            document.getElementById('res-p2-score').innerText = p2Score;
+
+            document.getElementById('res-p1-dunks').innerText = stats.p1.dunks;
+            document.getElementById('res-p2-dunks').innerText = stats.p2.dunks;
+            document.getElementById('res-p1-steals').innerText = stats.p1.steals;
+            document.getElementById('res-p2-steals').innerText = stats.p2.steals;
+            document.getElementById('res-p1-blocks').innerText = stats.p1.blocks;
+            document.getElementById('res-p2-blocks').innerText = stats.p2.blocks;
+
+            // Transition UI
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+        }
+
+        // VISUAL EFFECTS ENGINE
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+
+                if (p.type === 'smoke') {
+                    p.size += 0.15; // expand
+                }
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        // CANVAS ARTWORK AND PLAYER RENDERING
+        function renderCourt() {
+            // 1. CLEAR CANVAS AND DRAW NEON STREET GRADIENT
+            ctx.fillStyle = '#0f172a'; // dark slate
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid line street pattern
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 150);
+                ctx.lineTo(i, FLOOR_Y);
+                ctx.stroke();
+            }
+
+            // 2. DRAW URBAN GRAFFITI BACKGROUND DECORATION
+            ctx.save();
+            ctx.font = '900 130px Inter';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+            ctx.textAlign = 'center';
+            ctx.fillText("STREET", canvas.width / 2, 220);
+            ctx.fillText("HOOPS", canvas.width / 2, 340);
+            ctx.restore();
+
+            // Court floor paint
+            ctx.fillStyle = '#1e1b4b'; // deep indigo ground
+            ctx.fillRect(0, FLOOR_Y, canvas.width, canvas.height - FLOOR_Y);
+
+            // Court white outline lines
+            ctx.strokeStyle = '#f97316'; // orange court markers
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(10, FLOOR_Y);
+            ctx.lineTo(canvas.width - 10, FLOOR_Y);
+            ctx.stroke();
+
+            // 3-point arcs (drawn centered from basket rims)
+            ctx.strokeStyle = 'rgba(249, 115, 22, 0.25)';
+            ctx.lineWidth = 3;
+            // Left hoop 3-pt arc
+            ctx.beginPath();
+            ctx.arc(COURT.hoopLeft.rimX, FLOOR_Y, 260, -Math.PI/2, 0);
+            ctx.stroke();
+
+            // Right hoop 3-pt arc
+            ctx.beginPath();
+            ctx.arc(COURT.hoopRight.rimX, FLOOR_Y, 260, Math.PI, -Math.PI/2);
+            ctx.stroke();
+
+            // Mid court line
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2, FLOOR_Y);
+            ctx.lineTo(canvas.width/2, FLOOR_Y + 60);
+            ctx.stroke();
+
+            // Center circle
+            ctx.beginPath();
+            ctx.arc(canvas.width/2, FLOOR_Y, 70, Math.PI, 0);
+            ctx.stroke();
+
+            // 3. DRAW NET HOOPS & BACKBOARDS
+            drawHoop(COURT.hoopLeft, 'left');
+            drawHoop(COURT.hoopRight, 'right');
+
+            // 4. DRAW PLAYERS WITH COOL CUSTOM VECTOR ANIMATIONS
+            drawPlayer(p1);
+            drawPlayer(p2);
+
+            // 5. DRAW BASKETBALL & FIRE TRAIL EFFECT
+            drawBall();
+
+            // 6. DRAW PARTICLES
+            renderParticles();
+        }
+
+        // CANVAS HOOP & BACKBOARD PAINTER
+        function drawHoop(hoop, side) {
+            // Draw Backboard structure posts
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            const poleX = side === 'left' ? hoop.backboardX + 5 : hoop.backboardX + hoop.backboardW - 5;
+            ctx.moveTo(poleX, hoop.backboardY + hoop.backboardH);
+            ctx.lineTo(poleX, FLOOR_Y - 5);
+            ctx.stroke();
+
+            // Draw Backboard glass
+            ctx.fillStyle = 'rgba(30, 41, 59, 0.75)';
+            ctx.fillRect(hoop.backboardX, hoop.backboardY, hoop.backboardW, hoop.backboardH);
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(hoop.backboardX, hoop.backboardY, hoop.backboardW, hoop.backboardH);
+
+            // Small backboard inner square
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)'; // Red inner square
+            ctx.lineWidth = 2;
+            const innerY = hoop.backboardY + hoop.backboardH - 30;
+            const innerX = side === 'left' ? hoop.backboardX + hoop.backboardW : hoop.backboardX - 12;
+            ctx.strokeRect(side === 'left' ? hoop.backboardX : hoop.backboardX + hoop.backboardW - 12, innerY, 12, 15);
+
+            // Draw orange rim
+            ctx.strokeStyle = '#f97316';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(hoop.rimX, hoop.rimY);
+            ctx.lineTo(hoop.rimX + hoop.rimW, hoop.rimY);
+            ctx.stroke();
+
+            // Draw Net mesh ropes
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.lineWidth = 1.5;
+            const netYBottom = hoop.rimY + 28;
+            const netWBottom = hoop.rimW * 0.6;
+            const netXBottom = hoop.rimX + (hoop.rimW - netWBottom) / 2;
+
+            ctx.beginPath();
+            // Verticals crossing
+            for(let i=0; i<=5; i++) {
+                let startX = hoop.rimX + (hoop.rimW / 5) * i;
+                let endX = netXBottom + (netWBottom / 5) * i;
+                ctx.moveTo(startX, hoop.rimY);
+                ctx.lineTo(endX, netYBottom);
+
+                // Criss cross mesh lines
+                let offset = (hoop.rimW / 5);
+                ctx.moveTo(startX, hoop.rimY);
+                ctx.lineTo(netXBottom + (netWBottom / 5) * (5 - i), netYBottom);
+            }
+            ctx.stroke();
+        }
+
+        // CANVAS PLAYER ARTWORK PAINTER
+        function drawPlayer(p) {
+            ctx.save();
+
+            // Handle glowing fire aura if on fire
+            if (p.onFire) {
+                ctx.shadowColor = '#f97316';
+                ctx.shadowBlur = 20;
+                
+                // Fire spark drops
+                if (Math.random() < 0.25) {
+                    addParticle(
+                        p.x + Math.random() * p.width,
+                        p.y + Math.random() * p.height,
+                        (Math.random() - 0.5) * 2,
+                        -1 - Math.random() * 2,
+                        '#f97316',
+                        2 + Math.random() * 3,
+                        30
+                    );
+                }
+            }
+
+            // A. Head / Cap / Hair
+            const headR = 14;
+            const headX = p.x + p.width / 2;
+            const headY = p.y + headR;
+
+            // Face direction bias
+            const dirBias = p.facingRight ? 4 : -4;
+
+            // B. Draw body/jersey rectangle with rounded base
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            // Rounded shoulder jersey
+            ctx.roundRect(p.x, p.y + 25, p.width, p.height - 42, 12);
+            ctx.fill();
+
+            // C. Jersey Number on chest/back
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 13px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText(p.jersey, headX - dirBias*0.3, p.y + 46);
+
+            // D. Legs dynamic animation (running, jumping, standing)
+            ctx.fillStyle = '#1e293b'; // dark pants
+            ctx.fillRect(p.x + 4, p.y + p.height - 20, p.width - 8, 8);
+
+            // Shoes
+            ctx.fillStyle = '#ffffff'; // white sneakers
+            let leftShoeY = p.y + p.height - 6;
+            let rightShoeY = p.y + p.height - 6;
+
+            if (p.state === 'running') {
+                // Alternating feet height
+                const legSwing = Math.sin(Date.now() * 0.15) * 5;
+                leftShoeY += legSwing;
+                rightShoeY -= legSwing;
+            }
+
+            // Left shoe
+            ctx.fillRect(p.x + 3, leftShoeY, 14, 6);
+            // Right shoe
+            ctx.fillRect(p.x + p.width - 17, rightShoeY, 14, 6);
+
+            // E. Head draw
+            ctx.fillStyle = '#fbcfe8'; // peach face skin
+            ctx.beginPath();
+            ctx.arc(headX, headY, headR, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Caps / Hats
+            ctx.fillStyle = p.secColor;
+            ctx.beginPath();
+            ctx.arc(headX, headY - 4, headR - 1, Math.PI, 0); // Cap dome
+            ctx.fill();
+            // Cap bill
+            ctx.fillRect(headX - (p.facingRight ? 2 : 18), headY - 7, 20, 3);
+
+            // Eyes (simple arcade dots)
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(headX + dirBias, headY, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // F. Arms Dynamic State (Shooting, Blocking, Dribbling)
+            ctx.strokeStyle = '#fbcfe8';
+            ctx.lineWidth = 7;
+            ctx.lineCap = 'round';
+
+            if (p.shootCharging) {
+                // Arms up holding basketball overhead
+                ctx.beginPath();
+                ctx.moveTo(headX - 10, p.y + 35);
+                ctx.lineTo(headX - 18, p.y + 10);
+                ctx.lineTo(headX, p.y - 12);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(headX + 10, p.y + 35);
+                ctx.lineTo(headX + 18, p.y + 10);
+                ctx.lineTo(headX, p.y - 12);
+                ctx.stroke();
+            } 
+            else if (p.state === 'blocking') {
+                // Arms waved up high defensively
+                ctx.beginPath();
+                ctx.moveTo(p.x + 5, p.y + 35);
+                ctx.lineTo(p.x - 12, p.y - 5);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(p.x + p.width - 5, p.y + 35);
+                ctx.lineTo(p.x + p.width + 12, p.y - 5);
+                ctx.stroke();
+            }
+            else if (p.hasBall) {
+                // Arms cradling ball forward
+                ctx.beginPath();
+                ctx.moveTo(headX + (p.facingRight ? 5 : -5), p.y + 30);
+                ctx.lineTo(headX + dirBias * 3.5, p.y + 40);
+                ctx.stroke();
+            }
+            else if (p.defenseActive) {
+                // Arms spread low and wide
+                ctx.beginPath();
+                ctx.moveTo(p.x + 5, p.y + 35);
+                ctx.lineTo(p.x - 15, p.y + 42);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(p.x + p.width - 5, p.y + 35);
+                ctx.lineTo(p.x + p.width + 15, p.y + 42);
+                ctx.stroke();
+            }
+            else {
+                // Default swinging arms
+                ctx.beginPath();
+                ctx.moveTo(headX, p.y + 32);
+                ctx.lineTo(headX + dirBias * 1.5, p.y + 48);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        // CANVAS BALL DRAW ENGINE
+        function drawBall() {
+            ctx.save();
+
+            // A. Draw Fire Trail if On Fire (Player threw it while on fire)
+            if (ball.fireTrail.length > 0) {
+                for (let i = 0; i < ball.fireTrail.length; i++) {
+                    const t = ball.fireTrail[i];
+                    const alpha = 1 - (i / ball.fireTrail.length);
+                    const trailSize = ball.radius * (1.2 - (i / ball.fireTrail.length) * 0.8);
+                    
+                    ctx.fillStyle = `rgba(249, 115, 22, ${alpha * 0.6})`;
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, trailSize, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // inner core of flame
+                    ctx.fillStyle = `rgba(253, 224, 71, ${alpha * 0.8})`;
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, trailSize * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // B. Draw main basketball body
+            ctx.translate(ball.x, ball.y);
+            ctx.rotate(ball.rot);
+
+            ctx.fillStyle = ball.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Black stripes of basketball
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1.2;
+
+            // Horizontal middle line
+            ctx.beginPath();
+            ctx.moveTo(-ball.radius, 0);
+            ctx.lineTo(ball.radius, 0);
+            ctx.stroke();
+
+            // Vertical middle line
+            ctx.beginPath();
+            ctx.moveTo(0, -ball.radius);
+            ctx.lineTo(0, ball.radius);
+            ctx.stroke();
+
+            // Side curve lines
+            ctx.beginPath();
+            ctx.arc(-ball.radius * 0.9, 0, ball.radius * 0.8, -Math.PI/3, Math.PI/3);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(ball.radius * 0.9, 0, ball.radius * 0.8, Math.PI - Math.PI/3, Math.PI + Math.PI/3);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function renderParticles() {
+            ctx.save();
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                ctx.fillStyle = p.color;
+                
+                if (p.type === 'smoke') {
+                    ctx.fillStyle = `rgba(71, 85, 105, ${p.life / p.maxLife * 0.4})`;
+                } else {
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 6;
+                }
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // Window resize support so canvas renders properly scaled
+        window.addEventListener('resize', handleCanvasSizing);
+        function handleCanvasSizing() {
+            // Built-in width/height ratio is 1000x500. Tailwind scales the display automatically.
+        }
+
+        // INITIALIZATION
+        window.onload = function() {
+            // Prepare initial state
+            handleCanvasSizing();
+        }
+    </script>
+</body>
+</html>
